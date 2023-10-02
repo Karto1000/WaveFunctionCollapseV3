@@ -10,10 +10,9 @@ class Tile:
     def __init__(self, x: int, y: int, *, template_tile_manager, wfc):
         self.x, self.y = x, y
         self.available_tiles: list[TemplateTile] = copy.copy(template_tile_manager.tiles)
-        self.available_tiles.extend(copy.copy(template_tile_manager.special_tiles))
         self.template_tile_manager = template_tile_manager
         self.wfc = wfc
-        self.template_tile = copy.copy(template_tile_manager.get_template_tile(TileType.EMPTY))
+        self.template_tile = copy.copy(template_tile_manager.get_template_tile(TileType.SPECIAL_EMPTY))
         self.representer: TileRepresenter = None
 
     @property
@@ -21,19 +20,10 @@ class Tile:
         return len(self.available_tiles)
 
     def collapse(self):
-        available_tiles = self.available_tiles
-
-        if len(available_tiles) == 0:
+        if self.entropy == 0:
             raise Exception(self.x, self.y)
 
-        sorted_tiles = sorted(available_tiles, key=lambda t: t.tile_type.value[1], reverse=True)
-        for available_tile in sorted_tiles:
-            if random.randrange(0, 100) < available_tile.tile_type.value[1]:
-                self.template_tile = available_tile
-                break
-        else:
-            self.template_tile = sorted_tiles[0]
-
+        self.template_tile = random.choice(self.available_tiles)
         self.representer = TileRepresenterBuilder.from_tile(self)
 
         neighbors = {
@@ -52,7 +42,7 @@ class Tile:
             new_tiles = []
 
             for available_tile in neighbor.available_tiles:
-                if available_tile.tile_type in valid_tiles:
+                if (available_tile.tile_type, available_tile.rotation) in valid_tiles:
                     new_tiles.append(available_tile)
 
             neighbor.available_tiles = new_tiles

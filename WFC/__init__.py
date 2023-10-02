@@ -40,7 +40,7 @@ class WaveFunctionCollapse:
         tiles = []
 
         for tile in self.tiles:
-            if tile.template_tile.tile_type != TileType.EMPTY:
+            if tile.template_tile.tile_type != TileType.SPECIAL_EMPTY:
                 continue
 
             if tile.entropy < min_entropy:
