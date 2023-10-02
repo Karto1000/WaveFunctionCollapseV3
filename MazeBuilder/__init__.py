@@ -34,8 +34,8 @@ class MazeBuilder:
 
             for special_tile in self.registered_tiles:
                 for direction in Direction:
-                    if maze_tile_type in special_tile.connectable_tiles[direction]:
-                        connectable_tiles[direction.get_opposite()].append([special_tile.tile_type, special_tile.rotation])
+                    if [TileType.get_from_identifier(maze_tile_type), rotation] in special_tile.connectable_tiles[direction.get_opposite()]:
+                        connectable_tiles[direction].append([special_tile.tile_type, special_tile.rotation])
 
             self.template_tile_manager.add_tile(
                 TemplateTile(

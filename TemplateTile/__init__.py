@@ -12,31 +12,31 @@ class TileType(Enum):
     # ...
     # ---
     # ...
-    LINE = 0, 2
+    LINE = 0, 2, 50
 
     # ...
     # .--
     # .-.
-    CORNER = 2, 4
+    CORNER = 2, 4, 50
 
     # .-.
     # .--
     # .-.
-    FORK = 3, 4
+    FORK = 3, 4, 50
 
     # .-.
     # ---
     # .-.
-    CROSS = 4, 1
+    CROSS = 4, 1, 50
 
     # .-.
     # ...
     # ...
-    DEAD_END = 5, 4
+    DEAD_END = 5, 4, 50
 
     # --< SPECIAL >--
-    SPECIAL_SINGLE_ROOM = 6, 4
-    SPECIAL_EMPTY = -1, 1
+    SPECIAL_SINGLE_ROOM = 6, 4, 100
+    SPECIAL_EMPTY = -1, 1, 0
 
     def add_rotation(self, old_rotation: int, amount: int) -> int:
         max_rotation = self.value[1]
@@ -61,9 +61,6 @@ class TileType(Enum):
         tiles = {}
 
         for base_maze_tile in base_maze_tiles:
-            if base_maze_tile.name.startswith("SPECIAL"):
-                continue
-
             deque = collections.deque(cls.get_connections(base_maze_tile))
             for rotation in range(0, base_maze_tile.value[1]):
                 tiles[TileType.get_identifier(base_maze_tile, rotation)] = list(deque)
@@ -76,9 +73,6 @@ class TileType(Enum):
         maze_tiles = cls.get_rotated_maze_tiles()
 
         for tile, connection in maze_tiles.items():
-            if connection is None:
-                continue
-
             if connection[direction.value]:
                 yield [TileType.get_from_identifier(tile.split("_ROT_")[0]), int(tile.split("_")[-1])]
 
@@ -87,9 +81,6 @@ class TileType(Enum):
         maze_tiles = cls.get_rotated_maze_tiles()
 
         for tile, connection in maze_tiles.items():
-            if connection is None:
-                continue
-
             if not connection[direction.value]:
                 yield [TileType.get_from_identifier(tile.split("_ROT_")[0]), int(tile.split("_")[-1])]
 
@@ -132,6 +123,9 @@ class TemplateTile:
         self.tile_type = tile_type
         self.connectable_tiles = connectable_tiles
         self.rotation = rotation
+
+    def __repr__(self):
+        return f"TemplateTile<type: {self.tile_type} rotation: {self.rotation}>"
 
 
 class TemplateTileManager:

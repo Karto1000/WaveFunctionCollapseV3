@@ -23,7 +23,14 @@ class Tile:
         if self.entropy == 0:
             raise Exception(self.x, self.y)
 
-        self.template_tile = random.choice(self.available_tiles)
+        sorted_tiles = sorted(self.available_tiles, key=lambda t: t.tile_type.value[2], reverse=True)
+        for available_tile in sorted_tiles:
+            if random.randrange(0, 100) <= available_tile.tile_type.value[2]:
+                self.template_tile = available_tile
+                break
+        else:
+            self.template_tile = sorted_tiles[0]
+
         self.representer = TileRepresenterBuilder.from_tile(self)
 
         neighbors = {
@@ -46,3 +53,6 @@ class Tile:
                     new_tiles.append(available_tile)
 
             neighbor.available_tiles = new_tiles
+
+    def __repr__(self):
+        return f"Tile<x: {self.x}, y: {self.y}>"
