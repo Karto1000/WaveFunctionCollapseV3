@@ -42,7 +42,7 @@ class Tile:
             new_tiles = []
 
             for available_tile in neighbor.available_tiles:
-                if (available_tile.tile_type, available_tile.rotation) in valid_tiles:
+                if [available_tile.tile_type, available_tile.rotation] in valid_tiles:
                     new_tiles.append(available_tile)
 
             neighbor.available_tiles = new_tiles

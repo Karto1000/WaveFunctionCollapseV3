@@ -38,6 +38,11 @@ class TileType(Enum):
     SPECIAL_SINGLE_ROOM = 6, 4
     SPECIAL_EMPTY = -1, 1
 
+    def add_rotation(self, old_rotation: int, amount: int) -> int:
+        max_rotation = self.value[1]
+        possible_out_of_bounds_rotation = old_rotation + amount
+        return abs(possible_out_of_bounds_rotation % max_rotation)
+
     @classmethod
     def get_maze_tiles(cls) -> dict['TileType', list[bool, bool, bool, bool]]:
         tiles = {}
@@ -67,28 +72,26 @@ class TileType(Enum):
         return tiles
 
     @classmethod
-    def get_all_with_connection(cls, direction: Direction) -> Generator['TileType', None, None]:
-        maze_tiles = cls.get_maze_tiles()
+    def get_all_with_connection(cls, direction: Direction) -> Generator[tuple['TileType', int], None, None]:
+        maze_tiles = cls.get_rotated_maze_tiles()
 
         for tile, connection in maze_tiles.items():
             if connection is None:
                 continue
 
             if connection[direction.value]:
-                yield tile
+                yield [TileType.get_from_identifier(tile.split("_ROT_")[0]), int(tile.split("_")[-1])]
 
     @classmethod
-    def get_all_without_connection(cls, *directions: Direction) -> Generator['TileType', None, None]:
-        maze_tiles = cls.get_maze_tiles()
+    def get_all_without_connection(cls, direction: Direction) -> Generator[list['TileType', int], None, None]:
+        maze_tiles = cls.get_rotated_maze_tiles()
 
         for tile, connection in maze_tiles.items():
             if connection is None:
                 continue
 
-            for direction in directions:
-                if not connection[direction.value]:
-                    yield tile
-                    break
+            if not connection[direction.value]:
+                yield [TileType.get_from_identifier(tile.split("_ROT_")[0]), int(tile.split("_")[-1])]
 
     @staticmethod
     def get_identifier(tile_type: 'TileType', rotation: int) -> str:
@@ -113,18 +116,18 @@ class TileType(Enum):
                 return [False, False, True, False]
 
     @classmethod
-    def get_all_tiles(cls) -> list[tuple['TileType', int]]:
+    def get_all_tiles(cls) -> list[list['TileType', int]]:
         tile_types = []
 
         for tile_type in TileType:
             for rotation in range(0, tile_type.value[1]):
-                tile_types.append((tile_type, rotation))
+                tile_types.append([tile_type, rotation])
 
         return tile_types
 
 
 class TemplateTile:
-    def __init__(self, tile_type: TileType, connectable_tiles: dict[Direction, list[tuple[TileType, int]]],
+    def __init__(self, tile_type: TileType, connectable_tiles: dict[Direction, list[list[TileType, int]]],
                  rotation: int):
         self.tile_type = tile_type
         self.connectable_tiles = connectable_tiles
@@ -138,22 +141,37 @@ class TemplateTileManager:
     def add_tile(self, template_tile: TemplateTile):
         self.tiles.append(template_tile)
 
-    def add_special_tile(self, tile_type: TileType, connection: dict[Direction, list[tuple[TileType, int]]]):
+    def add_special_tile(self, tile_type: TileType, connections: dict[Direction, list[list[TileType, int]]]) \
+            -> list[TemplateTile]:
+        tiles = []
+
+        rotated_connections = copy.copy(connections)
+        switched_connections = copy.copy(connections)
+
+        original_keys = connections.keys()
+        rotated_keys = collections.deque(connections.keys())
+
         for rotation in range(0, tile_type.value[1]):
-            new_keys = collections.deque(connection.keys())
-            new_keys.rotate(rotation)
-
-            new_connections = {}
-            for key in new_keys:
-                new_connections[key] = connection[key]
-
-            self.add_tile(
-                TemplateTile(
-                    tile_type,
-                    new_connections,
-                    rotation=rotation
-                )
+            tile = TemplateTile(
+                tile_type,
+                copy.deepcopy(switched_connections),
+                rotation=rotation
             )
+
+            self.add_tile(tile)
+            tiles.append(tile)
+
+            rotated_keys.rotate(-1)
+
+            for rotated_key, original_key in zip(rotated_keys, original_keys):
+                switched_connections[rotated_key] = rotated_connections[original_key]
+
+            # Shift the rotation of each TileType by 1
+            for direction in Direction:
+                for connection in rotated_connections[direction]:
+                    connection[1] = connection[0].add_rotation(connection[1], 1)
+
+        return tiles
 
     def check_all_tiles_defined(self):
         added_tile_types = list(map(lambda t: t.tile_type, self.tiles))

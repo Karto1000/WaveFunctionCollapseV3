@@ -23,10 +23,22 @@ template_tile_manager.add_special_tile(
     }
 )
 
+tiles = template_tile_manager.add_special_tile(
+    TileType.SPECIAL_SINGLE_ROOM,
+    {
+        Direction.UP: list(TileType.get_all_without_connection(Direction.DOWN)),
+        Direction.RIGHT: list(TileType.get_all_without_connection(Direction.LEFT)),
+        Direction.DOWN: list(TileType.get_all_without_connection(Direction.UP)),
+        Direction.LEFT: list(TileType.get_all_with_connection(Direction.RIGHT))
+    }
+)
+
+for tile in tiles:
+    maze_builder.register_special_tile(tile)
+
 maze_builder.construct()
 
 template_tile_manager.check_all_tiles_defined()
-
 wfc = WaveFunctionCollapse(template_tile_manager)
 
 while True:

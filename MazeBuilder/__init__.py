@@ -1,5 +1,3 @@
-import collections
-
 from Direction import Direction
 from TemplateTile import TemplateTileManager, TileType, TemplateTile
 
@@ -29,10 +27,15 @@ class MazeBuilder:
 
                     if connections[direction.value] and neighbor_connection[opposite_direction.value]:
                         connectable_tiles[direction].append(
-                            (TileType.get_from_identifier(neighbor_tile_type), neighbor_rotation))
+                            [TileType.get_from_identifier(neighbor_tile_type), neighbor_rotation])
                     elif not connections[direction.value] and not neighbor_connection[opposite_direction.value]:
                         connectable_tiles[direction].append(
-                            (TileType.get_from_identifier(neighbor_tile_type), neighbor_rotation))
+                            [TileType.get_from_identifier(neighbor_tile_type), neighbor_rotation])
+
+            for special_tile in self.registered_tiles:
+                for direction in Direction:
+                    if maze_tile_type in special_tile.connectable_tiles[direction]:
+                        connectable_tiles[direction.get_opposite()].append([special_tile.tile_type, special_tile.rotation])
 
             self.template_tile_manager.add_tile(
                 TemplateTile(

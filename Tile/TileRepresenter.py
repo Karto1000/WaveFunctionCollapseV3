@@ -274,6 +274,16 @@ class EmptyRepresenter(TileRepresenter):
         pass
 
 
+class GenericBoxPlaceholder(TileRepresenter):
+
+    def draw(self, screen: pygame.Surface):
+        pygame.draw.rect(
+            screen,
+            (255, 0, 0),
+            (self.tile.x * Config.CW, self.tile.y * Config.CH, Config.CW, Config.CH)
+        )
+
+
 class TileRepresenterBuilder:
     representer_mapping = {
         TileType.LINE: LineRepresenter,
@@ -282,6 +292,7 @@ class TileRepresenterBuilder:
         TileType.DEAD_END: DeadEndRepresenter,
         TileType.FORK: ForkRepresenter,
         TileType.SPECIAL_EMPTY: EmptyRepresenter,
+        TileType.SPECIAL_SINGLE_ROOM: GenericBoxPlaceholder
     }
 
     @classmethod
