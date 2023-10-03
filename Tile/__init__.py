@@ -19,19 +19,24 @@ class Tile:
     def entropy(self):
         return len(self.available_tiles)
 
-    def collapse(self):
+    def set_template_tile(self, template_tile: TemplateTile):
+        self.template_tile = template_tile
+        self.representer = TileRepresenterBuilder.from_tile(self)
+
+    def collapse(self, override_type: TemplateTile = None):
         if self.entropy == 0:
             raise Exception(self.x, self.y)
 
-        sorted_tiles = sorted(self.available_tiles, key=lambda t: t.tile_type.value[2], reverse=True)
-        for available_tile in sorted_tiles:
-            if random.randrange(0, 100) <= available_tile.tile_type.value[2]:
-                self.template_tile = available_tile
-                break
+        if override_type is not None:
+            self.set_template_tile(override_type)
         else:
-            self.template_tile = sorted_tiles[0]
-
-        self.representer = TileRepresenterBuilder.from_tile(self)
+            sorted_tiles = sorted(self.available_tiles, key=lambda t: t.tile_type.value[2], reverse=True)
+            for available_tile in sorted_tiles:
+                if random.randrange(0, 100) <= available_tile.tile_type.value[2]:
+                    self.set_template_tile(available_tile)
+                    break
+            else:
+                self.set_template_tile(random.choice(sorted_tiles))
 
         neighbors = {
             Direction.UP: self.wfc.get_tile_at(self.x, self.y - 1),

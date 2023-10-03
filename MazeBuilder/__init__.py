@@ -1,3 +1,5 @@
+import numpy as numpy
+
 from Direction import Direction
 from TemplateTile import TemplateTileManager, TileType, TemplateTile
 
@@ -15,33 +17,38 @@ class MazeBuilder:
     def construct(self):
         maze_tile_types = TileType.get_rotated_maze_tiles()
 
-        for maze_tile_type, connections in maze_tile_types.items():
+        for maze_tile_type, obj in maze_tile_types.items():
             connectable_tiles = {Direction.UP: [], Direction.RIGHT: [], Direction.DOWN: [], Direction.LEFT: []}
             rotation = int(maze_tile_type.split("_")[-1])
+            connections = obj["connections"]
+            allowed_corners = obj["allowed_corners"]
 
             for direction in Direction:
                 opposite_direction = direction.get_opposite()
 
-                for neighbor_tile_type, neighbor_connection in maze_tile_types.items():
+                for neighbor_tile_type, neighbor_obj in maze_tile_types.items():
                     neighbor_rotation = int(neighbor_tile_type.split("_")[-1])
+                    neighbor_connections = neighbor_obj["connections"]
 
-                    if connections[direction.value] and neighbor_connection[opposite_direction.value]:
+                    if connections[direction.value] and neighbor_connections[opposite_direction.value]:
                         connectable_tiles[direction].append(
                             [TileType.get_from_identifier(neighbor_tile_type), neighbor_rotation])
-                    elif not connections[direction.value] and not neighbor_connection[opposite_direction.value]:
+                    elif not connections[direction.value] and not neighbor_connections[opposite_direction.value]:
                         connectable_tiles[direction].append(
                             [TileType.get_from_identifier(neighbor_tile_type), neighbor_rotation])
 
             for special_tile in self.registered_tiles:
                 for direction in Direction:
-                    if [TileType.get_from_identifier(maze_tile_type), rotation] in special_tile.connectable_tiles[direction.get_opposite()]:
+                    if [TileType.get_from_identifier(maze_tile_type), rotation] in special_tile.connectable_tiles[
+                        direction.get_opposite()]:
                         connectable_tiles[direction].append([special_tile.tile_type, special_tile.rotation])
 
             self.template_tile_manager.add_tile(
                 TemplateTile(
                     TileType.get_from_identifier(maze_tile_type),
                     connectable_tiles,
-                    rotation
+                    rotation=rotation,
+                    allowed_corners=allowed_corners
                 )
             )
 

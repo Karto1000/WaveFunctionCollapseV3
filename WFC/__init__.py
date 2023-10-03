@@ -15,7 +15,35 @@ class WaveFunctionCollapse:
 
         for y in range(0, Config.SH // Config.CH):
             for x in range(0, Config.SW // Config.CW):
-                self.tiles.append(Tile(x, y, template_tile_manager=template_tile_manager, wfc=self))
+                new_tile = Tile(x, y, template_tile_manager=template_tile_manager, wfc=self)
+                self.tiles.append(new_tile)
+
+                new_available_tiles = new_tile.available_tiles.copy()
+
+                if x == 0:
+                    for tile in new_tile.available_tiles:
+                        # IF IT CANT CONNECT TO LEFT WALL
+                        if not tile.allowed_corners[3] and tile in new_available_tiles:
+                            new_available_tiles.remove(tile)
+
+                if x == Config.SW // Config.CW - 1:
+                    for tile in new_tile.available_tiles:
+                        # IF IT CANT CONNECT TO RIGHT WALL
+                        if not tile.allowed_corners[1] and tile in new_available_tiles:
+                            new_available_tiles.remove(tile)
+
+                if y == 0:
+                    for tile in new_tile.available_tiles:
+                        # IF IT CANT CONNECT TO TOP WALL
+                        if not tile.allowed_corners[0] and tile in new_available_tiles:
+                            new_available_tiles.remove(tile)
+                if y == Config.SH // Config.CH - 1:
+                    for tile in new_tile.available_tiles:
+                        # IF IT CANT CONNECT TO Bottom WALL
+                        if not tile.allowed_corners[2] and tile in new_available_tiles:
+                            new_available_tiles.remove(tile)
+
+                new_tile.available_tiles = new_available_tiles
 
     def get_tile_at(self, x: int, y: int) -> Optional[Tile]:
         if x < 0 or x >= Config.SW // Config.CW:

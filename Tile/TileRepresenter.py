@@ -13,8 +13,9 @@ if typing.TYPE_CHECKING:
 
 
 class TileRepresenter:
-    def __init__(self, tile: Tile):
+    def __init__(self, tile: Tile, kwargs):
         self.tile = tile
+        self.kwargs = kwargs
 
     @abc.abstractmethod
     def draw(self, screen: pygame.Surface):
@@ -279,7 +280,7 @@ class GenericBoxPlaceholder(TileRepresenter):
     def draw(self, screen: pygame.Surface):
         pygame.draw.rect(
             screen,
-            (255, 0, 0),
+            (self.kwargs["color"]),
             (self.tile.x * Config.CW, self.tile.y * Config.CH, Config.CW, Config.CH)
         )
 
@@ -292,9 +293,20 @@ class TileRepresenterBuilder:
         TileType.DEAD_END: DeadEndRepresenter,
         TileType.FORK: ForkRepresenter,
         TileType.SPECIAL_EMPTY: EmptyRepresenter,
-        TileType.SPECIAL_SINGLE_ROOM: GenericBoxPlaceholder
+        TileType.SPECIAL_SINGLE_ROOM: (GenericBoxPlaceholder, (255, 0, 0)),
+        TileType.SPECIAL_BIG_ROOM_ENTRANCE: (GenericBoxPlaceholder, (0, 255, 0)),
+        TileType.SPECIAL_BIG_ROOM_MAIN: (GenericBoxPlaceholder, (0, 0, 255)),
+        TileType.SPECIAL_BIG_ROOM_WALL: (GenericBoxPlaceholder, (122, 122, 122)),
+        TileType.SPECIAL_BIG_ROOM_CORNER: (GenericBoxPlaceholder, (20, 20, 20))
     }
 
     @classmethod
     def from_tile(cls, tile: Tile) -> TileRepresenter:
-        return cls.representer_mapping[tile.template_tile.tile_type](tile)
+        representer = cls.representer_mapping[tile.template_tile.tile_type]
+        kwargs = {}
+
+        if type(representer) == tuple:
+            kwargs = {"color": representer[1]}
+            representer = representer[0]
+
+        return representer(tile, kwargs=kwargs)
