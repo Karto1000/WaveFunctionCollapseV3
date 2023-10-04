@@ -13,7 +13,7 @@ class TileType(Enum):
     # ...
     # ---
     # ...
-    LINE = 0, 2, 50
+    LINE = 0, 2, 55
 
     # ...
     # .--
@@ -33,7 +33,7 @@ class TileType(Enum):
     # .-.
     # ...
     # ...
-    DEAD_END = 5, 4, 50
+    DEAD_END = 5, 4, 51
 
     # --< SPECIAL >--
 
@@ -45,7 +45,7 @@ class TileType(Enum):
     # ...
     # --x
     # ...
-    SPECIAL_BIG_ROOM_ENTRANCE = 7, 4, 10
+    SPECIAL_BIG_ROOM_ENTRANCE = 7, 4, 0
 
     # ---
     # ---
@@ -137,18 +137,25 @@ class TileType(Enum):
         return cls[identifier.split("_ROT_")[0]]
 
     @classmethod
-    def get_connections(cls, tile_type: 'TileType') -> list[bool, bool, bool, bool]:
+    def get_connections(cls, tile_type: 'TileType', rotation: int = 0) -> list[bool, bool, bool, bool]:
+        connections = collections.deque()
+
         match tile_type:
             case cls.LINE:
-                return [False, True, False, True]
+                connections.extend([False, True, False, True])
             case cls.CORNER:
-                return [False, True, True, False]
+                connections.extend([False, True, True, False])
             case cls.FORK:
-                return [True, True, True, False]
+                connections.extend([True, True, True, False])
             case cls.CROSS:
-                return [True, True, True, True]
+                connections.extend([True, True, True, True])
             case cls.DEAD_END:
-                return [False, False, True, False]
+                connections.extend([False, False, True, False])
+            case _:
+                return None
+
+        connections.rotate(rotation)
+        return list(connections)
 
     @classmethod
     def get_allowed_corners(cls, tile_type: 'TileType') -> list[bool, bool, bool, bool]:
@@ -165,6 +172,24 @@ class TileType(Enum):
                 return [False, False, False, False]
             case _:
                 raise Exception(f"Tile Type {tile_type.name} does not have corners defined")
+
+    @classmethod
+    def get_type_from_connections(cls, connections: list[bool, bool, bool, bool]) -> tuple['TileType', int]:
+        connections = collections.deque(connections)
+
+        for i in range(4):
+            match list(connections):
+                case [False, True, False, True]:
+                    return cls.LINE, i
+                case [False, True, True, False]:
+                    return cls.CORNER, i
+                case [True, True, True, False]:
+                    return cls.FORK, i
+                case [True, True, True, True]:
+                    return cls.CROSS, i
+                case [False, False, True, False]:
+                    return cls.DEAD_END, i
+            connections.rotate(-1)
 
     @classmethod
     def get_all_tiles(cls) -> list[list['TileType', int]]:
@@ -240,6 +265,5 @@ class TemplateTileManager:
                 raise Exception(f"Tile Type {tile_type} was not defined")
 
     def get_template_tile(self, tile_type: TileType, rotation: int = 0) -> TemplateTile:
-        tile = list(filter(lambda t: t.tile_type == tile_type, self.tiles))
-        tile[0].rotation = rotation
+        tile = list(filter(lambda t: t.tile_type == tile_type and t.rotation == rotation, self.tiles))
         return tile[0]

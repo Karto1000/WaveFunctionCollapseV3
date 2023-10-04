@@ -5,6 +5,7 @@ import pygame
 
 from Direction import Direction
 from MazeBuilder import MazeBuilder
+from MazeFinisher import MazeFinisher
 from TemplateTile import TemplateTileManager, TileType
 from WFC import WaveFunctionCollapse
 
@@ -14,6 +15,8 @@ CLOCK = pygame.time.Clock()
 
 template_tile_manager = TemplateTileManager()
 maze_builder = MazeBuilder(template_tile_manager)
+
+random.seed(Config.SEED)
 
 
 def define_special_tiles():
@@ -96,6 +99,16 @@ maze_builder.construct()
 
 template_tile_manager.check_all_tiles_defined()
 wfc = WaveFunctionCollapse(template_tile_manager)
+maze_finisher = MazeFinisher(wfc)
+
+wfc.get_tile_at(Config.SW // Config.CW // 4, Config.SH // Config.CH // 4).collapse(
+    override_type=template_tile_manager.get_template_tile(TileType.SPECIAL_BIG_ROOM_ENTRANCE))
+wfc.get_tile_at(Config.SW // Config.CW // 4 * 3, Config.SH // Config.CH // 4).collapse(
+    override_type=template_tile_manager.get_template_tile(TileType.SPECIAL_BIG_ROOM_ENTRANCE))
+wfc.get_tile_at(Config.SW // Config.CW // 4, Config.SH // Config.CH // 4 * 3).collapse(
+    override_type=template_tile_manager.get_template_tile(TileType.SPECIAL_BIG_ROOM_ENTRANCE))
+wfc.get_tile_at(Config.SW // Config.CW // 4 * 3, Config.SH // Config.CH // 4 * 3).collapse(
+    override_type=template_tile_manager.get_template_tile(TileType.SPECIAL_BIG_ROOM_ENTRANCE))
 
 while True:
     CLOCK.tick(Config.FPS)
@@ -108,7 +121,12 @@ while True:
             pygame.quit()
             exit(0)
 
-    wfc.update()
+    if not wfc.is_finished:
+        wfc.update()
+    else:
+        maze_finisher.update()
+        maze_finisher.draw(SCREEN)
+
     wfc.draw(SCREEN)
 
     pygame.display.flip()

@@ -12,7 +12,7 @@ class Tile:
         self.available_tiles: list[TemplateTile] = copy.copy(template_tile_manager.tiles)
         self.template_tile_manager = template_tile_manager
         self.wfc = wfc
-        self.template_tile = copy.copy(template_tile_manager.get_template_tile(TileType.SPECIAL_EMPTY))
+        self.template_tile: TemplateTile = copy.copy(template_tile_manager.get_template_tile(TileType.SPECIAL_EMPTY))
         self.representer: TileRepresenter = None
 
     @property

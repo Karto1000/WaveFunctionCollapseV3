@@ -253,7 +253,7 @@ class DeadEndRepresenter(TileRepresenter):
                     self.tile.x * Config.CW + Config.CW // 4,
                     self.tile.y * Config.CH,
                     Config.CW // 2,
-                    Config.CH // 2
+                    Config.CH - Config.CH // 4
                 )
             )
         elif self.tile.template_tile.rotation == 3:
@@ -297,7 +297,7 @@ class TileRepresenterBuilder:
         TileType.SPECIAL_BIG_ROOM_ENTRANCE: (GenericBoxPlaceholder, (0, 255, 0)),
         TileType.SPECIAL_BIG_ROOM_MAIN: (GenericBoxPlaceholder, (0, 0, 255)),
         TileType.SPECIAL_BIG_ROOM_WALL: (GenericBoxPlaceholder, (122, 122, 122)),
-        TileType.SPECIAL_BIG_ROOM_CORNER: (GenericBoxPlaceholder, (20, 20, 20))
+        TileType.SPECIAL_BIG_ROOM_CORNER: (GenericBoxPlaceholder, (20, 20, 20)),
     }
 
     @classmethod
